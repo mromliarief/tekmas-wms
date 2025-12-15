@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse Management System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>Warehouse Management System</h1>
+            <div id="auth-section">
+                <div id="login-form">
+                    <input type="text" id="username" placeholder="Username">
+                    <input type="password" id="password" placeholder="Password">
+                    <button onclick="login()">Login</button>
+                </div>
+                <div id="user-info" style="display: none;">
+                    <span id="logged-in-user"></span>
+                    <button onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <nav id="main-nav" style="display: none;">
+            <button onclick="showSection('dashboard')">Dashboard</button>
+            <button onclick="showSection('input-barang')">Barang Masuk</button>
+            <button onclick="showSection('stok-barang')">Stok Barang</button>
+            <button onclick="showSection('barang-keluar')">Barang Keluar</button>
+            <button onclick="showSection('retur-barang')">Retur Barang</button>
+            <button onclick="showSection('supplier')">Daftar Supplier</button>
+            <button id="member-section" onclick="showSection('member')" style="display: none;">Member</button>
+        </nav>
+
+        <main>
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section">
+                <h2>Dashboard</h2>
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3>Total Barang</h3>
+                        <p id="total-items">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Stok</h3>
+                        <p id="total-stock">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Supplier</h3>
+                        <p id="total-suppliers">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Member</h3>
+                        <p id="total-members">0</p>
+                    </div>
+                    <div class="reset-section">
+                        <h3>Reset Data</h3>
+                        <p>Hati-hati! Tindakan ini akan menghapus semua data yang tersimpan.</p>
+                        <button onclick="confirmReset()" class="reset-btn">Reset Semua Data</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Input Barang Section -->
+            <section id="input-barang" class="content-section" style="display: none;">
+                <h2>Barang Masuk</h2>
+                
+                <div class="form-toggle-buttons">
+                    <button class="toggle-form-btn active" onclick="toggleInputForm('histori')">Histori Barang Masuk</button>
+                    <button class="toggle-form-btn" onclick="resetItemForm(); toggleInputForm('form')">Input Baru</button>
+                </div>
+                
+                <div id="input-barang-histori">
+                    <div class="action-buttons">
+                        <button onclick="window.print()">Cetak</button>
+                        <button onclick="exportToExcel('incoming-history-table', 'barang-masuk')">Ekspor</button>
+                    </div>
+                    
+                    <table id="incoming-history-table">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Kode Barang</th>
+                                <th>Nama Barang</th>
+                                <th>Jumlah</th>
+                                <th>Satuan</th>
+                                <th>Harga</th>
+                                <th>Diskon</th>
+                                <th>Harga Final</th>
+                                <th>Supplier</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="incoming-history-body"></tbody>
+                    </table>
+                </div>
+                
+                <div id="input-barang-form" class="hidden">
+                    <form id="item-form">
+                        <input type="hidden" id="edit-item-id" value="">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="item-date">Tanggal Input</label>
+                                <input type="date" id="item-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="item-code">Kode Barang</label>
+                                <input type="text" id="item-code" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="item-name">Nama Barang</label>
+                                <input type="text" id="item-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="item-qty">Jumlah</label>
+                                <input type="number" id="item-qty" required min="1">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="item-unit">Satuan</label>
+                                <select id="item-unit" required>
+                                    <option value="pcs">pcs</option>
+                                    <option value="kg">kg</option>
+                                    <option value="box">box</option>
+                                    <option value="dus">dus</option>
+                                    <option value="liter">liter</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="item-price">Harga</label>
+                                <input type="number" id="item-price" min="0" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="item-discount">Potongan (Diskon %)</label>
+                                <input type="number" id="item-discount" min="0" max="100" value="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="item-final-price">Harga Setelah Potongan</label>
+                                <input type="number" id="item-final-price" readonly>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="item-supplier">Supplier</label>
+                                <select id="item-supplier" required>
+                                    <option value="">Pilih Supplier</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" id="item-submit-btn">Simpan</button>
+                            <button type="button" onclick="cancelEditItem()" id="item-cancel-btn" style="display: none;">Batal</button>
+                            <button type="button" onclick="toggleInputForm('histori')" class="toggle-form-btn">Kembali ke Histori</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Stok Barang Section -->
+            <section id="stok-barang" class="content-section" style="display: none;">
+                <h2>Stok Barang</h2>
+                <div class="action-buttons">
+                    <button onclick="exportToExcel('stock-table', 'stok-barang')">Export Excel</button>
+                    <button onclick="window.print()">Cetak</button>
+                </div>
+                <table id="stock-table">
+                    <thead>
+                        <tr>
+                            <th>Kode Barang</th>
+                            <th>Nama Barang</th>
+                            <th>Jumlah Stok</th>
+                            <th>Satuan</th>
+                            <th>Harga Rata-rata</th>
+                            <th>Supplier</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-table-body"></tbody>
+                </table>
+            </section>
+
+            <!-- Barang Keluar Section -->
+            <section id="barang-keluar" class="content-section" style="display: none;">
+                <h2>Barang Keluar</h2>
+                
+                <div class="form-toggle-buttons">
+                    <button class="toggle-form-btn active" onclick="toggleOutgoingForm('histori')">Histori Barang Keluar</button>
+                    <button class="toggle-form-btn" onclick="resetOutgoingForm(); toggleOutgoingForm('form')">Input Baru</button>
+                </div>
+                
+                <div id="barang-keluar-histori">
+                    <div class="action-buttons">
+                        <button onclick="window.print()">Cetak</button>
+                        <button onclick="exportToExcel('outgoing-history-table', 'barang-keluar')">Ekspor</button>
+                    </div>
+                    
+                    <table id="outgoing-history-table">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Kode Barang</th>
+                                <th>Nama Barang</th>
+                                <th>Jumlah</th>
+                                <th>Tujuan</th>
+                                <th>Keterangan</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="outgoing-history-body"></tbody>
+                    </table>
+                </div>
+                
+                <div id="barang-keluar-form" class="hidden">
+                    <form id="outgoing-form">
+                        <input type="hidden" id="edit-outgoing-id" value="">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="outgoing-date">Tanggal Keluar</label>
+                                <input type="date" id="outgoing-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="outgoing-item">Pilih Barang</label>
+                                <select id="outgoing-item" required></select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="outgoing-qty">Jumlah</label>
+                                <input type="number" id="outgoing-qty" required min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="outgoing-destination">Tujuan</label>
+                                <input type="text" id="outgoing-destination" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="outgoing-notes">Keterangan</label>
+                            <textarea id="outgoing-notes" rows="3"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" id="outgoing-submit-btn">Simpan</button>
+                            <button type="button" onclick="cancelEditOutgoing()" id="outgoing-cancel-btn" style="display: none;">Batal</button>
+                            <button type="button" onclick="toggleOutgoingForm('histori')" class="toggle-form-btn">Kembali ke Histori</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Retur Barang Section -->
+            <section id="retur-barang" class="content-section" style="display: none;">
+                <h2>Retur Barang</h2>
+                
+                <div class="form-toggle-buttons">
+                    <button class="toggle-form-btn active" onclick="toggleReturnForm('histori')">Histori Retur</button>
+                    <button class="toggle-form-btn" onclick="resetReturnForm(); toggleReturnForm('form')">Input Baru</button>
+                </div>
+                
+                <div id="retur-barang-histori">
+                    <div class="action-buttons">
+                        <button onclick="window.print()">Cetak</button>
+                        <button onclick="exportToExcel('return-history-table', 'retur-barang')">Ekspor</button>
+                    </div>
+                    
+                    <table id="return-history-table">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Kode Barang</th>
+                                <th>Nama Barang</th>
+                                <th>Jumlah Retur</th>
+                                <th>Alasan</th>
+                                <th>Keterangan</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="return-history-body"></tbody>
+                    </table>
+                </div>
+                
+                <div id="retur-barang-form" class="hidden">
+                    <form id="return-form">
+                        <input type="hidden" id="edit-return-id" value="">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="return-date">Tanggal Retur</label>
+                                <input type="date" id="return-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="return-item">Pilih Barang</label>
+                                <select id="return-item" required></select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="return-qty">Jumlah Retur</label>
+                                <input type="number" id="return-qty" required min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="return-reason">Alasan Retur</label>
+                                <select id="return-reason" required>
+                                    <option value="rusak">Barang Rusak</option>
+                                    <option value="tidak-sesuai">Tidak Sesuai</option>
+                                    <option value="kadaluarsa">Kadaluarsa</option>
+                                    <option value="lainnya">Lainnya</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="return-notes">Keterangan</label>
+                            <textarea id="return-notes" rows="3"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" id="return-submit-btn">Proses Retur</button>
+                            <button type="button" onclick="cancelEditReturn()" id="return-cancel-btn" style="display: none;">Batal</button>
+                            <button type="button" onclick="toggleReturnForm('histori')" class="toggle-form-btn">Kembali ke Histori</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Supplier Section -->
+            <section id="supplier" class="content-section" style="display: none;">
+                <h2>Daftar Supplier</h2>
+                
+                <div class="form-toggle-buttons">
+                    <button class="toggle-form-btn active" onclick="toggleSupplierForm('histori')">Histori Supplier</button>
+                    <button class="toggle-form-btn" onclick="resetSupplierForm(); toggleSupplierForm('form')">Input Baru</button>
+                </div>
+                
+                <div id="supplier-histori">
+                    <div class="action-buttons">
+                        <button onclick="window.print()">Cetak</button>
+                        <button onclick="exportToExcel('supplier-table', 'daftar-supplier')">Ekspor</button>
+                    </div>
+                    
+                    <table id="supplier-table">
+                        <thead>
+                            <tr>
+                                <th>Kode Supplier</th>
+                                <th>Nama Supplier</th>
+                                <th>Alamat</th>
+                                <th>Nomor Kontak</th>
+                                <th>Nama Salesman</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="supplier-table-body"></tbody>
+                    </table>
+                </div>
+                
+                <div id="supplier-form-container" class="hidden">
+                    <h3 id="supplier-form-title">Tambah Supplier Baru</h3>
+                    <form id="supplier-form">
+                        <input type="hidden" id="edit-supplier-id" value="">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="supplier-code">Kode Supplier</label>
+                                <input type="text" id="supplier-code" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="supplier-name">Nama Supplier</label>
+                                <input type="text" id="supplier-name" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="supplier-address">Alamat</label>
+                                <textarea id="supplier-address" rows="2" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="supplier-phone">Nomor Kontak</label>
+                                <input type="text" id="supplier-phone" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="supplier-salesman">Nama Salesman</label>
+                                <input type="text" id="supplier-salesman">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" id="supplier-submit-btn">Simpan</button>
+                            <button type="button" onclick="cancelEditSupplier()" id="supplier-cancel-btn">Batal</button>
+                            <button type="button" onclick="toggleSupplierForm('histori')" class="toggle-form-btn">Kembali ke Histori</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Member Section -->
+            <section id="member" class="content-section" style="display: none;">
+                <h2>Daftar Member</h2>
+                <form id="member-form">
+                    <input type="hidden" id="edit-member-id" value="">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="member-code">Kode Member</label>
+                            <input type="text" id="member-code" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="member-name">Nama Member</label>
+                            <input type="text" id="member-name" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="member-address">Alamat</label>
+                            <textarea id="member-address" rows="2" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="member-phone">Nomor Kontak</label>
+                            <input type="text" id="member-phone" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="member-email">Email</label>
+                            <input type="email" id="member-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="member-join-date">Tanggal Bergabung</label>
+                            <input type="date" id="member-join-date" required>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" id="member-submit-btn">Simpan</button>
+                        <button type="button" onclick="cancelEditMember()" id="member-cancel-btn" style="display: none;">Batal</button>
+                        <button type="button" onclick="exportToExcel('member-table', 'daftar-member')" class="export-btn">Export Excel</button>
+                    </div>
+                </form>
+                <table id="member-table">
+                    <thead>
+                        <tr>
+                            <th>Kode Member</th>
+                            <th>Nama Member</th>
+                            <th>Alamat</th>
+                            <th>Kontak</th>
+                            <th>Email</th>
+                            <th>Bergabung</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="member-table-body"></tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
